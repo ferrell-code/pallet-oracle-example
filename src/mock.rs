@@ -1,6 +1,5 @@
 #![cfg(test)]
 
-use super::*;
 use frame_support::{
     parameter_types,
     traits::{ConstU128, ConstU32, ConstU64, Everything},
@@ -65,10 +64,9 @@ impl pallet_balances::Config for Runtime {
 }
 
 parameter_types! {
-    // Derives are nice for ease of use in testing
-    #[derive(Clone, PartialEq, RuntimeDebug)]
     pub const MaxEventSize: u32 = 1028 * 1028;
-    pub const StaleTime: u32 = 10_000;
+    // one hour
+    pub const StaleTime: u32 = 60 * 60 * 1_000;
     pub const OperatorAccount: AccountId = ALICE;
 }
 

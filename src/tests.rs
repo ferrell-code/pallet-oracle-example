@@ -7,7 +7,8 @@ use crate::mock::*;
 use frame_support::{assert_err, assert_noop, assert_ok, bounded_vec};
 
 pub const INIT_TIMESTAMP: u64 = 30_000;
-pub const BLOCK_TIME: u64 = 1000;
+// 12 seconds per block
+pub const BLOCK_TIME: u64 = 12_000;
 
 fn run_to_block(n: u64) {
     while System::block_number() < n {
@@ -38,7 +39,7 @@ fn feed_call_works() {
             bounded_vec![2, 2]
         ));
         assert_eq!(Oracle::get_most_recent_feed().unwrap(), vec![2, 2]);
-        System::assert_last_event(Event::<Runtime>::EventFeeded { time: 35_000 }.into());
+        System::assert_last_event(Event::<Runtime>::EventFeeded { time: 90_000 }.into());
     });
 }
 
@@ -50,20 +51,21 @@ fn remove_call_validation_works() {
             Origin::signed(ALICE),
             bounded_vec![1, 1]
         ));
-        System::assert_last_event(Event::<Runtime>::EventFeeded { time: 32_000 }.into());
+        System::assert_last_event(Event::<Runtime>::EventFeeded { time: 54_000 }.into());
         run_to_block(5);
 
         // Is not stale yet, so validation fails
-        let call = Call::remove_stale_event { time: 32_000 };
+        let call = Call::remove_stale_event { time: 54_000 };
         // invalid feed
-        let call2 = Call::remove_stale_event { time: 32_001 };
+        let call2 = Call::remove_stale_event { time: 54_001 };
 
         assert_err!(
             <Oracle as ValidateUnsigned>::validate_unsigned(TransactionSource::External, &call),
             InvalidTransaction::Stale
         );
-        assert_eq!(Oracle::get_feed_at_time(32_000).unwrap(), vec![1, 1]);
-        run_to_block(13);
+        assert_eq!(Oracle::get_feed_at_time(54_000).unwrap(), vec![1, 1]);
+        // One hour of blocks passing (5 blocks per minute means 300 blocks per hour)
+        run_to_block(305);
 
         assert_err!(
             <Oracle as ValidateUnsigned>::validate_unsigned(TransactionSource::External, &call2),
@@ -73,9 +75,9 @@ fn remove_call_validation_works() {
             TransactionSource::External,
             &call
         ));
-        assert_ok!(Oracle::remove_stale_event(Origin::none(), 32_000));
+        assert_ok!(Oracle::remove_stale_event(Origin::none(), 54_000));
 
-        assert_eq!(Oracle::get_feed_at_time(31_000), None);
-        System::assert_last_event(Event::<Runtime>::EventRemoved { time: 32_000 }.into());
+        assert_eq!(Oracle::get_feed_at_time(54_000), None);
+        System::assert_last_event(Event::<Runtime>::EventRemoved { time: 54_000 }.into());
     });
 }
