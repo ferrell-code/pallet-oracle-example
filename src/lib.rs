@@ -91,6 +91,8 @@ pub mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Feeds arbitrary data onchain, only authorized account can feed
+        ///
+        /// TODO: Needs correct benchmarking
         #[pallet::weight(0)]
         pub fn feed_event(origin: OriginFor<T>, event: OracleEvent<T>) -> DispatchResult {
             let feeder = ensure_signed(origin)?;
@@ -108,6 +110,8 @@ pub mod pallet {
 
         /// Removes feeded events from storage, this is an unsigned transaction meaning anyone can submit it.
         /// Only valid if transaction is indeed stale
+        ///
+        /// TODO: Needs correct benchmarking
         #[pallet::weight(0)]
         pub fn remove_stale_event(origin: OriginFor<T>, time: MomentOf<T>) -> DispatchResult {
             ensure_none(origin)?;
